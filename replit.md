@@ -81,7 +81,7 @@ Russian language interface support for quiz content and UI.
 - **React & TypeScript**: Frontend framework and type system
 - **Express**: Backend web server framework
 - **Drizzle ORM**: Type-safe database operations
-- **@neondatabase/serverless**: PostgreSQL client for serverless environments
+- **pg**: Standard PostgreSQL client for Node.js
 
 ### UI and Styling
 - **Tailwind CSS**: Utility-first CSS framework
@@ -107,12 +107,27 @@ Russian language interface support for quiz content and UI.
 - **Database**: Drizzle migrations for schema management
 - **Environment Variables**: DATABASE_URL for PostgreSQL connection
 
-### Replit-Specific Features
-- **Replit Vite Plugins**: Runtime error overlay and cartographer
-- **Development Banner**: Automatic replit dev environment detection
-- **Hot Reload**: Integrated development experience
+### Platform-Agnostic Features
+- **Standard PostgreSQL**: Compatible with any PostgreSQL provider (Supabase, Neon, ElephantSQL)
+- **Flexible Deployment**: Can be deployed on Vercel, Netlify, Railway, Render, or any Node.js hosting
+- **Environment Variables**: Standard NODE_ENV and DATABASE_URL configuration
 
 The application is designed for scalability with the database abstraction layer allowing easy switching between development (in-memory) and production (PostgreSQL) storage implementations. The real-time WebSocket architecture supports multiple concurrent game sessions with proper session isolation and cleanup.
+
+## Migration to External Services (January 2025)
+
+### Changes Made
+- **Database**: Migrated from @neondatabase/serverless to standard PostgreSQL (pg package)
+- **Configuration**: Removed Replit-specific Vite plugins and dependencies
+- **SSL Support**: Added automatic SSL configuration for production PostgreSQL connections
+- **Documentation**: Added deployment.md with instructions for external hosting providers
+
+### Recommended External Services
+- **Database**: Supabase (free tier: 500MB), Neon, or ElephantSQL
+- **Hosting**: Vercel (recommended), Railway, Render, or Netlify
+- **Development**: Works with any Node.js environment
+
+The application is now platform-agnostic and can be deployed on any hosting provider that supports Node.js and PostgreSQL.
 
 ## Recent Changes (December 2024)
 
