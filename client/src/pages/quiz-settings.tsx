@@ -29,9 +29,8 @@ const quizSettingsSchema = z.object({
   template: z.string().optional(),
   minPlayers: z.number().min(1, 'Минимум 1 игрок').max(100),
   maxPlayers: z.number().min(1, 'Минимум 1 игрок').max(100),
-  timeLimit: z.number().min(5, 'Минимум 5 секунд').max(300, 'Максимум 300 секунд'),
   useAudioNarration: z.boolean(),
-  aiVoice: z.string().optional(),
+  aiVoiceProvider: z.enum(['silero', 'web-speech', 'apihost']).default('web-speech'),
   isPublic: z.boolean(),
   questionTemplate: z.string().optional(),
 });

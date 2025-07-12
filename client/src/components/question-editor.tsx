@@ -19,12 +19,21 @@ interface Answer {
 
 interface Question {
   id: string;
-  type: 'multiple_choice' | 'true_false' | 'image_question' | 'audio_question';
+  type: 'multiple_choice' | 'true_false' | 'image_question' | 'audio_question' | 'visual_question';
   text: string;
   image?: string;
   audio?: string;
+  video?: string;
   answers: Answer[];
   timeLimit: number;
+  useAIVoice?: boolean;
+  aiVoiceProvider?: 'silero' | 'web-speech' | 'apihost';
+  aiVoiceText?: string;
+  visualElements?: any[];
+  background?: {
+    type: 'color' | 'image' | 'video';
+    value: string;
+  };
 }
 
 interface QuestionEditorProps {
@@ -86,14 +95,134 @@ export function QuestionEditor({ question, onChange, onDelete, className }: Ques
     input.click();
   };
 
+  const playAIVoice = () => {
+    const textToSpeak = question.aiVoiceText || question.text;
+    if (!textToSpeak) return;
+
+    if (question.aiVoiceProvider === 'web-speech' && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'ru-RU';
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    } else if (question.aiVoiceProvider === 'silero') {
+      // TODO: Интеграция с Silero TTS
+      console.log('Silero TTS integration needed');
+    } else if (question.aiVoiceProvider === 'apihost') {
+      // TODO: Интеграция с apihost.ru
+      console.log('ApiHost TTS integration needed');
+    }
+  };
+
   return (
-    <div className={cn("space-y-6", className)}>
-      <Tabs defaultValue="form" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="form">Форма</TabsTrigger>
-          <TabsTrigger value="visual">Визуальный редактор</TabsTrigger>
-          <TabsTrigger value="preview">Предпросмотр</TabsTrigger>
-        </TabsList>
+    <div className={cn("flex space-x-6", className)}>
+      {/* Left Settings Panel */}
+      <div className="w-80 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Настройки вопроса</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Editor Mode Selection */}
+            <div>
+              <Label className="text-xs font-medium">Тип редактора</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {/* Switch to form mode */}}
+                >
+                  Форма
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {/* Switch to visual mode */}}
+                >
+                  Визуальный
+                </Button>
+              </div>
+            </div>
+
+            {/* Time Limit */}
+            <div>
+              <Label htmlFor="time-limit" className="text-xs font-medium">
+                Время на ответ (сек)
+              </Label>
+              <Input
+                id="time-limit"
+                type="number"
+                min="5"
+                max="300"
+                value={question.timeLimit}
+                onChange={(e) => updateQuestion({ timeLimit: parseInt(e.target.value) || 30 })}
+                className="mt-1"
+              />
+            </div>
+
+            {/* AI Voice */}
+            <div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="ai-voice"
+                  checked={question.useAIVoice || false}
+                  onChange={(e) => updateQuestion({ useAIVoice: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="ai-voice" className="text-xs font-medium">
+                  Озвучка вопроса
+                </Label>
+              </div>
+              
+              {question.useAIVoice && (
+                <div className="mt-2 space-y-2">
+                  <div>
+                    <Label className="text-xs">Провайдер TTS</Label>
+                    <select
+                      value={question.aiVoiceProvider || 'web-speech'}
+                      onChange={(e) => updateQuestion({ aiVoiceProvider: e.target.value as any })}
+                      className="w-full text-xs border rounded px-2 py-1 mt-1"
+                    >
+                      <option value="web-speech">Web Speech API</option>
+                      <option value="silero">Silero TTS (русские голоса)</option>
+                      <option value="apihost">ApiHost.ru</option>
+                    </select>
+                  </div>
+                  
+                  <Textarea
+                    placeholder="Текст для озвучки (если отличается от вопроса)"
+                    value={question.aiVoiceText || ''}
+                    onChange={(e) => updateQuestion({ aiVoiceText: e.target.value })}
+                    className="text-xs"
+                    rows={2}
+                  />
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={playAIVoice}
+                    className="text-xs w-full"
+                  >
+                    <Mic className="w-3 h-3 mr-1" />
+                    Прослушать
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1">
+        <Tabs defaultValue="form" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="form">Форма</TabsTrigger>
+            <TabsTrigger value="visual">Визуальный редактор</TabsTrigger>
+            <TabsTrigger value="preview">Предпросмотр</TabsTrigger>
+          </TabsList>
 
         <TabsContent value="form" className="space-y-6">
           {/* Question Content */}
@@ -235,23 +364,18 @@ export function QuestionEditor({ question, onChange, onDelete, className }: Ques
             />
           </div>
         </TabsContent>
-      </Tabs>
+        </Tabs>
 
-      {/* Embedded Preview */}
-      <QuestionPreview
-        question={question}
-        isFullscreen={false}
-      />
-
-      {/* Fullscreen Preview */}
-      {isPreviewFullscreen && (
-        <QuestionPreview
-          question={question}
-          isFullscreen={true}
-          onToggleFullscreen={() => setIsPreviewFullscreen(false)}
-          onClose={() => setIsPreviewFullscreen(false)}
-        />
-      )}
+        {/* Fullscreen Preview */}
+        {isPreviewFullscreen && (
+          <QuestionPreview
+            question={question}
+            isFullscreen={true}
+            onToggleFullscreen={() => setIsPreviewFullscreen(false)}
+            onClose={() => setIsPreviewFullscreen(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }

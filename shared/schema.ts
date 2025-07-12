@@ -72,20 +72,36 @@ export const insertGameAnswerSchema = createInsertSchema(gameAnswers).omit({
 // Question schema
 export const questionSchema = z.object({
   id: z.string(),
-  type: z.enum(['multiple_choice', 'true_false', 'image_question', 'audio_question']),
+  type: z.enum(['multiple_choice', 'true_false', 'image_question', 'audio_question', 'visual_question']),
   text: z.string(),
   image: z.string().optional(),
   audio: z.string().optional(),
+  video: z.string().optional(),
   answers: z.array(z.object({
     id: z.string(),
     text: z.string(),
     isCorrect: z.boolean(),
   })),
   timeLimit: z.number().default(30),
-  timerDelay: z.number().min(0).max(60).default(0), // Задержка таймера в секундах
   useAIVoice: z.boolean().default(false),
+  aiVoiceProvider: z.enum(['silero', 'web-speech', 'apihost']).default('web-speech'),
   aiVoiceText: z.string().optional(),
-  customTimerDelay: z.number().optional(), // Пользовательская задержка
+  visualElements: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['text', 'image', 'video', 'shape', 'answer-button']),
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+    rotation: z.number().default(0),
+    content: z.string(),
+    styles: z.record(z.any()),
+    isCorrectAnswer: z.boolean().optional(),
+  })).default([]),
+  background: z.object({
+    type: z.enum(['color', 'image', 'video']),
+    value: z.string(),
+  }).optional(),
 });
 
 // Splash screen schema
@@ -98,13 +114,14 @@ export const splashScreenSchema = z.object({
     type: z.enum(['color', 'image', 'video']),
     value: z.string(),
   }).optional(),
-  elements: z.array(z.object({
+  visualElements: z.array(z.object({
     id: z.string(),
-    type: z.enum(['text', 'image', 'video']),
+    type: z.enum(['text', 'image', 'video', 'shape']),
     x: z.number(),
     y: z.number(),
     width: z.number(),
     height: z.number(),
+    rotation: z.number().default(0),
     content: z.string(),
     styles: z.record(z.any()),
   })).default([]),

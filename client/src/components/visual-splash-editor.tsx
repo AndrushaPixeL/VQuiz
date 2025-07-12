@@ -1,35 +1,27 @@
-import { useState, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+import { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
 import { 
   Type, 
   Image, 
-  Square, 
-  Circle, 
-  Move, 
-  Palette, 
-  Upload,
   Video,
+  Square, 
   Save,
   Trash2,
   Copy,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Bold,
-  Italic,
-  Underline
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  Palette
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { SplashScreen } from '@shared/schema';
 
 interface VisualElement {
   id: string;
-  type: 'text' | 'image' | 'video' | 'shape' | 'answer-button';
+  type: 'text' | 'image' | 'video' | 'shape';
   x: number;
   y: number;
   width: number;
@@ -48,30 +40,21 @@ interface VisualElement {
     textAlign: string;
     opacity: number;
   };
-  isCorrectAnswer?: boolean;
 }
 
-interface VisualQuestionEditorProps {
-  question: any;
-  onChange: (question: any) => void;
+interface VisualSplashEditorProps {
+  splashScreen: SplashScreen;
+  onChange: (splashScreen: SplashScreen) => void;
   className?: string;
 }
 
-export function VisualQuestionEditor({ question, onChange, className }: VisualQuestionEditorProps) {
-  const [elements, setElements] = useState<VisualElement[]>(question.visualElements || []);
+export function VisualSplashEditor({ splashScreen, onChange, className }: VisualSplashEditorProps) {
+  const [elements, setElements] = useState<VisualElement[]>(splashScreen.visualElements || []);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
   const [backgroundStyle, setBackgroundStyle] = useState(
-    question.background || {
-      type: 'color',
-      value: '#6366f1',
-    }
+    splashScreen.background || { type: 'color', value: '#6366f1' }
   );
-  const [savedTemplates, setSavedTemplates] = useState<any[]>(() => {
-    const saved = localStorage.getItem('saved-question-templates');
-    return saved ? JSON.parse(saved) : [];
-  });
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const addElement = (type: VisualElement['type']) => {
@@ -80,27 +63,27 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
       type,
       x: 100,
       y: 100,
-      width: type === 'text' ? 200 : 150,
-      height: type === 'text' ? 50 : 100,
+      width: type === 'text' ? 300 : 200,
+      height: type === 'text' ? 60 : 150,
       rotation: 0,
-      content: type === 'text' ? 'Новый текст' : '',
+      content: type === 'text' ? 'Заголовок заставки' : '',
       styles: {
-        fontSize: 16,
+        fontSize: type === 'text' ? 32 : 16,
         fontFamily: 'Arial',
-        fontWeight: 'normal',
+        fontWeight: 'bold',
         color: '#ffffff',
-        backgroundColor: type === 'answer-button' ? '#ef4444' : 'transparent',
+        backgroundColor: type === 'shape' ? '#ef4444' : 'transparent',
         borderRadius: 8,
         borderWidth: 0,
         borderColor: '#000000',
         textAlign: 'center',
         opacity: 1
-      },
-      isCorrectAnswer: false
+      }
     };
 
-    setElements([...elements, newElement]);
-    setSelectedElement(newElement.id);
+    const newElements = [...elements, newElement];
+    setElements(newElements);
+    updateSplashScreen(newElements);
   };
 
   const updateElement = (id: string, updates: Partial<VisualElement>) => {
@@ -108,75 +91,25 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
       el.id === id ? { ...el, ...updates } : el
     );
     setElements(newElements);
-    // Update question data
-    onChange({
-      ...question,
-      visualElements: newElements,
-      background: backgroundStyle
-    });
+    updateSplashScreen(newElements);
   };
 
   const deleteElement = (id: string) => {
     const newElements = elements.filter(el => el.id !== id);
     setElements(newElements);
-    onChange({
-      ...question,
-      visualElements: newElements
-    });
+    updateSplashScreen(newElements);
     if (selectedElement === id) {
       setSelectedElement(null);
     }
   };
 
-  const duplicateElement = (id: string) => {
-    const element = elements.find(el => el.id === id);
-    if (!element) return;
-    
-    const newElement = {
-      ...element,
-      id: Date.now().toString(),
-      x: element.x + 20,
-      y: element.y + 20
-    };
-    
-    const newElements = [...elements, newElement];
-    setElements(newElements);
+  const updateSplashScreen = (newElements?: VisualElement[]) => {
     onChange({
-      ...question,
-      visualElements: newElements
+      ...splashScreen,
+      visualElements: newElements || elements,
+      background: backgroundStyle
     });
   };
-
-  const selectElementFromList = (id: string) => {
-    setSelectedElement(id);
-  };
-
-  const saveAsTemplate = () => {
-    const template = {
-      id: Date.now().toString(),
-      name: `Шаблон ${savedTemplates.length + 1}`,
-      elements: elements,
-      background: backgroundStyle,
-      createdAt: new Date(),
-      isPersonal: true
-    };
-    
-    const newTemplates = [template, ...savedTemplates];
-    setSavedTemplates(newTemplates);
-    localStorage.setItem('saved-question-templates', JSON.stringify(newTemplates));
-  };
-
-  const applyTemplate = (template: any) => {
-    setElements(template.elements || []);
-    setBackgroundStyle(template.background || { type: 'color', value: '#6366f1' });
-    onChange({
-      ...question,
-      visualElements: template.elements || [],
-      background: template.background
-    });
-  };
-
-
 
   const handleMouseDown = (e: React.MouseEvent, elementId: string) => {
     e.preventDefault();
@@ -184,7 +117,7 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
     setIsDragging(true);
   };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !selectedElement || !canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
@@ -192,24 +125,13 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
     const y = e.clientY - rect.top;
 
     updateElement(selectedElement, { x, y });
-  }, [isDragging, selectedElement]);
+  };
 
   const handleMouseUp = () => {
     setIsDragging(false);
   };
 
   const selectedElementData = elements.find(el => el.id === selectedElement);
-
-  const handleElementClick = (elementId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedElement(elementId);
-  };
-
-  const handleElementMouseDown = (elementId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    setSelectedElement(elementId);
-    setIsDragging(true);
-  };
 
   const renderElement = (element: VisualElement) => {
     const baseStyles = {
@@ -220,7 +142,7 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
       height: element.height,
       transform: `rotate(${element.rotation}deg)`,
       cursor: 'move',
-      border: selectedElement === element.id ? '2px solid #3b82f6' : 'none',
+      border: selectedElement === element.id ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.2)',
       borderRadius: element.styles.borderRadius,
       backgroundColor: element.styles.backgroundColor,
       opacity: element.styles.opacity,
@@ -244,7 +166,7 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '8px'
+              padding: '16px'
             }}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
@@ -257,12 +179,17 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
             key={element.id}
             style={baseStyles}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="bg-gray-200 flex items-center justify-center"
           >
             {element.content ? (
-              <img src={element.content} alt="" className="w-full h-full object-cover" />
+              <img 
+                src={element.content} 
+                alt="Элемент" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             ) : (
-              <Image className="w-8 h-8 text-gray-400" />
+              <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600">
+                Изображение
+              </div>
             )}
           </div>
         );
@@ -272,35 +199,31 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
             key={element.id}
             style={baseStyles}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
-            className="bg-gray-200 flex items-center justify-center"
           >
             {element.content ? (
-              <video src={element.content} className="w-full h-full object-cover" />
+              <video 
+                src={element.content} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                controls={false}
+                muted
+                loop
+                autoPlay
+              />
             ) : (
-              <Video className="w-8 h-8 text-gray-400" />
+              <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white">
+                Видео
+              </div>
             )}
           </div>
         );
-      case 'answer-button':
+      case 'shape':
         return (
           <div
             key={element.id}
-            style={{
-              ...baseStyles,
-              fontSize: element.styles.fontSize,
-              fontFamily: element.styles.fontFamily,
-              fontWeight: element.styles.fontWeight,
-              color: element.styles.color,
-              textAlign: element.styles.textAlign as any,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '8px',
-              border: element.isCorrectAnswer ? '3px solid #10b981' : '2px solid #6b7280'
-            }}
+            style={baseStyles}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
           >
-            {element.content || 'Вариант ответа'}
+            <div className="w-full h-full" />
           </div>
         );
       default:
@@ -309,11 +232,11 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
   };
 
   return (
-    <div className={cn("flex h-screen", className)}>
+    <div className={cn("flex h-[600px]", className)}>
       {/* Tools Panel */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h3 className="font-semibold mb-4">Инструменты</h3>
+          <h3 className="font-semibold mb-4">Инструменты заставки</h3>
           
           <div className="grid grid-cols-2 gap-2 mb-4">
             <Button variant="outline" size="sm" onClick={() => addElement('text')}>
@@ -328,16 +251,9 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
               <Video className="w-4 h-4 mr-2" />
               Видео
             </Button>
-            <Button variant="outline" size="sm" onClick={() => addElement('answer-button')}>
+            <Button variant="outline" size="sm" onClick={() => addElement('shape')}>
               <Square className="w-4 h-4 mr-2" />
-              Ответ
-            </Button>
-          </div>
-
-          <div className="flex gap-2 mb-4">
-            <Button variant="outline" size="sm" onClick={saveAsTemplate}>
-              <Save className="w-4 h-4 mr-2" />
-              Сохранить шаблон
+              Фигура
             </Button>
           </div>
         </div>
@@ -347,7 +263,7 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="properties">Свойства</TabsTrigger>
               <TabsTrigger value="background">Фон</TabsTrigger>
-              <TabsTrigger value="templates">Шаблоны</TabsTrigger>
+              <TabsTrigger value="elements">Элементы</TabsTrigger>
             </TabsList>
 
             <TabsContent value="properties" className="space-y-4">
@@ -356,9 +272,6 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">Выбранный элемент</h4>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="outline" onClick={() => duplicateElement(selectedElementData.id)}>
-                        <Copy className="w-4 h-4" />
-                      </Button>
                       <Button size="sm" variant="outline" onClick={() => deleteElement(selectedElementData.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -381,29 +294,10 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                           onValueChange={([value]) => updateElement(selectedElementData.id, { 
                             styles: { ...selectedElementData.styles, fontSize: value }
                           })}
-                          min={8}
-                          max={72}
+                          min={12}
+                          max={96}
                           step={1}
                         />
-                      </div>
-                      <div>
-                        <Label>Шрифт</Label>
-                        <Select
-                          value={selectedElementData.styles.fontFamily}
-                          onValueChange={(value) => updateElement(selectedElementData.id, {
-                            styles: { ...selectedElementData.styles, fontFamily: value }
-                          })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Arial">Arial</SelectItem>
-                            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                            <SelectItem value="Helvetica">Helvetica</SelectItem>
-                            <SelectItem value="Georgia">Georgia</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                       <div>
                         <Label>Цвет текста</Label>
@@ -429,26 +323,6 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                     </div>
                   )}
 
-                  {selectedElementData.type === 'answer-button' && (
-                    <>
-                      <div>
-                        <Label>Текст ответа</Label>
-                        <Input
-                          value={selectedElementData.content}
-                          onChange={(e) => updateElement(selectedElementData.id, { content: e.target.value })}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedElementData.isCorrectAnswer}
-                          onChange={(e) => updateElement(selectedElementData.id, { isCorrectAnswer: e.target.checked })}
-                        />
-                        <Label>Правильный ответ</Label>
-                      </div>
-                    </>
-                  )}
-
                   <div>
                     <Label>Цвет фона</Label>
                     <Input
@@ -472,19 +346,6 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                       step={0.1}
                     />
                   </div>
-
-                  <div>
-                    <Label>Скругление углов</Label>
-                    <Slider
-                      value={[selectedElementData.styles.borderRadius]}
-                      onValueChange={([value]) => updateElement(selectedElementData.id, {
-                        styles: { ...selectedElementData.styles, borderRadius: value }
-                      })}
-                      min={0}
-                      max={50}
-                      step={1}
-                    />
-                  </div>
                 </div>
               ) : (
                 <p className="text-gray-500">Выберите элемент для редактирования</p>
@@ -496,7 +357,11 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                 <Label>Тип фона</Label>
                 <Select
                   value={backgroundStyle.type}
-                  onValueChange={(value) => setBackgroundStyle({ ...backgroundStyle, type: value })}
+                  onValueChange={(value) => {
+                    const newBackground = { ...backgroundStyle, type: value };
+                    setBackgroundStyle(newBackground);
+                    updateSplashScreen();
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -515,7 +380,11 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                   <Input
                     type="color"
                     value={backgroundStyle.value}
-                    onChange={(e) => setBackgroundStyle({ ...backgroundStyle, value: e.target.value })}
+                    onChange={(e) => {
+                      const newBackground = { ...backgroundStyle, value: e.target.value };
+                      setBackgroundStyle(newBackground);
+                      updateSplashScreen();
+                    }}
                   />
                 </div>
               )}
@@ -525,7 +394,11 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                   <Label>URL изображения</Label>
                   <Input
                     value={backgroundStyle.value}
-                    onChange={(e) => setBackgroundStyle({ ...backgroundStyle, value: e.target.value })}
+                    onChange={(e) => {
+                      const newBackground = { ...backgroundStyle, value: e.target.value };
+                      setBackgroundStyle(newBackground);
+                      updateSplashScreen();
+                    }}
                     placeholder="Введите URL изображения"
                   />
                 </div>
@@ -536,31 +409,55 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
                   <Label>URL видео</Label>
                   <Input
                     value={backgroundStyle.value}
-                    onChange={(e) => setBackgroundStyle({ ...backgroundStyle, value: e.target.value })}
+                    onChange={(e) => {
+                      const newBackground = { ...backgroundStyle, value: e.target.value };
+                      setBackgroundStyle(newBackground);
+                      updateSplashScreen();
+                    }}
                     placeholder="Введите URL видео"
                   />
                 </div>
               )}
             </TabsContent>
 
-            <TabsContent value="templates" className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Мои шаблоны</h4>
-                {savedTemplates.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Нет сохраненных шаблонов</p>
-                ) : (
-                  <div className="space-y-2">
-                    {savedTemplates.map((template) => (
-                      <div key={template.id} className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">{template.name}</span>
-                        <Button size="sm" variant="outline" onClick={() => applyTemplate(template)}>
-                          Загрузить
-                        </Button>
+            <TabsContent value="elements" className="space-y-2">
+              <Label className="text-sm font-medium">Список элементов</Label>
+              {elements.length === 0 ? (
+                <p className="text-gray-500 text-sm">Нет элементов</p>
+              ) : (
+                <div className="space-y-2">
+                  {elements.map((element) => (
+                    <div 
+                      key={element.id} 
+                      className={cn(
+                        "flex items-center justify-between p-2 border rounded cursor-pointer hover:bg-gray-50",
+                        selectedElement === element.id && "bg-blue-50 border-blue-300"
+                      )}
+                      onClick={() => setSelectedElement(element.id)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        {element.type === 'text' && <Type className="w-4 h-4" />}
+                        {element.type === 'image' && <Image className="w-4 h-4" />}
+                        {element.type === 'video' && <Video className="w-4 h-4" />}
+                        {element.type === 'shape' && <Square className="w-4 h-4" />}
+                        <span className="text-sm">
+                          {element.type === 'text' ? element.content.slice(0, 20) + '...' : element.type}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteElement(element.id);
+                        }}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -581,6 +478,7 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onClick={() => setSelectedElement(null)}
         >
           {backgroundStyle.type === 'video' && backgroundStyle.value && (
             <video
@@ -595,8 +493,8 @@ export function VisualQuestionEditor({ question, onChange, className }: VisualQu
           {elements.map(renderElement)}
           
           {elements.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-white/50">
-              <p>Добавьте элементы с помощью панели инструментов</p>
+            <div className="absolute inset-0 flex items-center justify-center text-white/70">
+              <p className="text-xl">Добавьте элементы для создания заставки</p>
             </div>
           )}
         </div>

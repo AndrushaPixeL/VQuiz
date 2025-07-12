@@ -23,6 +23,29 @@ import {
 } from 'lucide-react';
 import type { SplashScreen } from '@shared/schema';
 
+interface VisualElement {
+  id: string;
+  type: 'text' | 'image' | 'video' | 'shape';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  content: string;
+  styles: {
+    fontSize: number;
+    fontFamily: string;
+    fontWeight: string;
+    color: string;
+    backgroundColor: string;
+    borderRadius: number;
+    borderWidth: number;
+    borderColor: string;
+    textAlign: string;
+    opacity: number;
+  };
+}
+
 interface SplashScreenEditorProps {
   splashScreen: SplashScreen;
   onChange: (splashScreen: SplashScreen) => void;
