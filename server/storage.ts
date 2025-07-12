@@ -1,4 +1,6 @@
 import { quizzes, games, users, gameAnswers, type User, type InsertUser, type Quiz, type InsertQuiz, type Game, type InsertGame, type GameAnswer, type InsertGameAnswer } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -233,4 +235,112 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getQuiz(id: number): Promise<Quiz | undefined> {
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
+    return quiz || undefined;
+  }
+
+  async getQuizzesByUser(userId: number): Promise<Quiz[]> {
+    return await db.select().from(quizzes).where(eq(quizzes.createdBy, userId));
+  }
+
+  async getPublicQuizzes(): Promise<Quiz[]> {
+    return await db.select().from(quizzes).where(eq(quizzes.isPublic, true));
+  }
+
+  async createQuiz(insertQuiz: InsertQuiz): Promise<Quiz> {
+    const [quiz] = await db
+      .insert(quizzes)
+      .values(insertQuiz)
+      .returning();
+    return quiz;
+  }
+
+  async updateQuiz(id: number, updates: Partial<InsertQuiz>): Promise<Quiz | undefined> {
+    const [quiz] = await db
+      .update(quizzes)
+      .set(updates)
+      .where(eq(quizzes.id, id))
+      .returning();
+    return quiz || undefined;
+  }
+
+  async deleteQuiz(id: number): Promise<boolean> {
+    const result = await db.delete(quizzes).where(eq(quizzes.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getGame(id: number): Promise<Game | undefined> {
+    const [game] = await db.select().from(games).where(eq(games.id, id));
+    return game || undefined;
+  }
+
+  async getGameByCode(gameCode: string): Promise<Game | undefined> {
+    const [game] = await db.select().from(games).where(eq(games.gameCode, gameCode));
+    return game || undefined;
+  }
+
+  async createGame(insertGame: InsertGame): Promise<Game> {
+    const [game] = await db
+      .insert(games)
+      .values(insertGame)
+      .returning();
+    return game;
+  }
+
+  async updateGame(id: number, updates: Partial<InsertGame>): Promise<Game | undefined> {
+    const [game] = await db
+      .update(games)
+      .set(updates)
+      .where(eq(games.id, id))
+      .returning();
+    return game || undefined;
+  }
+
+  async deleteGame(id: number): Promise<boolean> {
+    const result = await db.delete(games).where(eq(games.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async createGameAnswer(insertAnswer: InsertGameAnswer): Promise<GameAnswer> {
+    const [answer] = await db
+      .insert(gameAnswers)
+      .values(insertAnswer)
+      .returning();
+    return answer;
+  }
+
+  async getGameAnswers(gameId: number): Promise<GameAnswer[]> {
+    return await db.select().from(gameAnswers).where(eq(gameAnswers.gameId, gameId));
+  }
+
+  async getPlayerAnswers(gameId: number, playerId: string): Promise<GameAnswer[]> {
+    return await db.select().from(gameAnswers).where(
+      and(
+        eq(gameAnswers.gameId, gameId),
+        eq(gameAnswers.playerId, playerId)
+      )
+    );
+  }
+}
+
+export const storage = new DatabaseStorage();
