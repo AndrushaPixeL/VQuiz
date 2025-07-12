@@ -138,10 +138,10 @@ export default function QuizConstructorUnified() {
         newContent = {
           id: Date.now().toString(),
           type: 'multiple_choice',
-          text: '',
+          text: 'Новый вопрос',
           answers: [
-            { id: '1', text: '', isCorrect: false },
-            { id: '2', text: '', isCorrect: false }
+            { id: '1', text: 'Вариант 1', isCorrect: false },
+            { id: '2', text: 'Вариант 2', isCorrect: true }
           ],
           timeLimit: 30,
           useAIVoice: false,
@@ -152,10 +152,10 @@ export default function QuizConstructorUnified() {
       case 'splash':
         newContent = {
           id: Date.now().toString(),
-          title: '',
+          title: `Заставка ${contentItems.filter(i => i.type === 'splash').length + 1}`,
           subtitle: '',
           type: 'start',
-          backgroundStyle: { type: 'color', value: '#6366f1' },
+          background: { type: 'color', value: '#6366f1' },
           visualElements: []
         };
         title = `Заставка ${contentItems.filter(i => i.type === 'splash').length + 1}`;
@@ -166,7 +166,7 @@ export default function QuizConstructorUnified() {
           title: 'Результаты',
           showLeaderboard: true,
           showStats: true,
-          backgroundStyle: { type: 'color', value: '#10b981' }
+          background: { type: 'color', value: '#10b981' }
         };
         title = `Результаты ${contentItems.filter(i => i.type === 'results').length + 1}`;
         break;
@@ -182,7 +182,6 @@ export default function QuizConstructorUnified() {
     const newItems = [...contentItems, newItem];
     setContentItems(newItems);
     updateQuizFromItems(newItems);
-    setEditingItem(newItem);
   };
 
   const saveContent = (updatedContent: any) => {

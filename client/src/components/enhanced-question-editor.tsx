@@ -244,7 +244,10 @@ export function EnhancedQuestionEditor({
         <div
           style={baseStyles}
           onMouseDown={(e) => handleMouseDown(e, element.id)}
-          onClick={() => setSelectedElement(element.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedElement(element.id);
+          }}
         >
           {element.type === 'text' && (
             <div
@@ -747,7 +750,11 @@ export function EnhancedQuestionEditor({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              onClick={() => setSelectedElement(null)}
+              onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedElement(null);
+            }
+          }}
             >
               {backgroundStyle.type === 'video' && backgroundStyle.value && (
                 <video

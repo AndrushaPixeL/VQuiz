@@ -169,6 +169,10 @@ export function VisualSplashEditor({ splashScreen, onChange, className }: Visual
               padding: '16px'
             }}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedElement(element.id);
+            }}
           >
             {element.content}
           </div>
@@ -179,6 +183,10 @@ export function VisualSplashEditor({ splashScreen, onChange, className }: Visual
             key={element.id}
             style={baseStyles}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedElement(element.id);
+            }}
           >
             {element.content ? (
               <img 
@@ -199,6 +207,10 @@ export function VisualSplashEditor({ splashScreen, onChange, className }: Visual
             key={element.id}
             style={baseStyles}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedElement(element.id);
+            }}
           >
             {element.content ? (
               <video 
@@ -222,6 +234,10 @@ export function VisualSplashEditor({ splashScreen, onChange, className }: Visual
             key={element.id}
             style={baseStyles}
             onMouseDown={(e) => handleMouseDown(e, element.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedElement(element.id);
+            }}
           >
             <div className="w-full h-full" />
           </div>
@@ -478,7 +494,11 @@ export function VisualSplashEditor({ splashScreen, onChange, className }: Visual
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          onClick={() => setSelectedElement(null)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedElement(null);
+            }
+          }}
         >
           {backgroundStyle.type === 'video' && backgroundStyle.value && (
             <video
