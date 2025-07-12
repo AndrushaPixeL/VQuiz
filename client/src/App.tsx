@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import QuizConstructor from "@/pages/quiz-constructor";
 import GameHost from "@/pages/game-host";
 import MobilePlayer from "@/pages/mobile-player";
+import SoloPlay from "@/pages/solo-play";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/constructor/:id" component={QuizConstructor} />
       <Route path="/host/:gameCode" component={GameHost} />
       <Route path="/play/:gameCode" component={MobilePlayer} />
+      <Route path="/solo/:quizId" component={SoloPlay} />
       <Route component={NotFound} />
     </Switch>
   );

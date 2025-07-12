@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Play, Edit, Users } from "lucide-react";
+import { Calendar, Play, Edit, Users, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface QuizCardProps {
@@ -15,6 +15,7 @@ interface QuizCardProps {
   };
   onStart: (quizId: number) => void;
   onEdit: (quizId: number) => void;
+  onTestSolo: (quizId: number) => void;
   className?: string;
 }
 
@@ -25,7 +26,7 @@ const gradients = [
   "gradient-primary"
 ];
 
-export function QuizCard({ quiz, onStart, onEdit, className }: QuizCardProps) {
+export function QuizCard({ quiz, onStart, onEdit, onTestSolo, className }: QuizCardProps) {
   const gradient = gradients[quiz.id % gradients.length];
   
   return (
@@ -55,14 +56,24 @@ export function QuizCard({ quiz, onStart, onEdit, className }: QuizCardProps) {
           </div>
         </div>
         
-        <div className="flex gap-2">
-          <Button onClick={() => onStart(quiz.id)} className="flex-1">
-            <Play className="w-4 h-4 mr-2" />
-            Играть
-          </Button>
-          <Button variant="outline" onClick={() => onEdit(quiz.id)} className="flex-1">
-            <Edit className="w-4 h-4 mr-2" />
-            Изменить
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Button onClick={() => onStart(quiz.id)} className="flex-1">
+              <Play className="w-4 h-4 mr-2" />
+              Играть
+            </Button>
+            <Button variant="outline" onClick={() => onEdit(quiz.id)} className="flex-1">
+              <Edit className="w-4 h-4 mr-2" />
+              Изменить
+            </Button>
+          </div>
+          <Button 
+            variant="secondary" 
+            onClick={() => onTestSolo(quiz.id)} 
+            className="w-full"
+          >
+            <User className="w-4 h-4 mr-2" />
+            Тест соло
           </Button>
         </div>
       </CardContent>

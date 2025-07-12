@@ -44,6 +44,10 @@ export default function Home() {
     setShowJoinModal(false);
   };
 
+  const handleTestSolo = (quizId: number) => {
+    window.location.href = `/solo/${quizId}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -198,6 +202,7 @@ export default function Home() {
                   quiz={quiz}
                   onStart={handleStartQuiz}
                   onEdit={(id) => window.location.href = `/constructor/${id}`}
+                  onTestSolo={handleTestSolo}
                 />
               ))}
             </div>
