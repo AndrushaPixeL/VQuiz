@@ -94,7 +94,7 @@ export default function Home() {
                   asChild 
                   className="bg-white text-primary hover:bg-gray-100"
                 >
-                  <Link href="/constructor">
+                  <Link href="/quiz-settings">
                     <Plus className="w-5 h-5 mr-2" />
                     Создать новый квиз
                   </Link>

@@ -82,6 +82,62 @@ export const questionSchema = z.object({
     isCorrect: z.boolean(),
   })),
   timeLimit: z.number().default(30),
+  timerDelay: z.number().min(0).max(60).default(0), // Задержка таймера в секундах
+  useAIVoice: z.boolean().default(false),
+  aiVoiceText: z.string().optional(),
+  customTimerDelay: z.number().optional(), // Пользовательская задержка
+});
+
+// Splash screen schema
+export const splashScreenSchema = z.object({
+  id: z.string(),
+  type: z.enum(['start', 'round', 'end']),
+  title: z.string(),
+  subtitle: z.string().optional(),
+  background: z.object({
+    type: z.enum(['color', 'image', 'video']),
+    value: z.string(),
+  }).optional(),
+  elements: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['text', 'image', 'video']),
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+    content: z.string(),
+    styles: z.record(z.any()),
+  })).default([]),
+});
+
+// Results screen schema
+export const resultsScreenSchema = z.object({
+  id: z.string(),
+  title: z.string().default('Результаты'),
+  background: z.object({
+    type: z.enum(['color', 'image', 'video']),
+    value: z.string(),
+  }).optional(),
+  leaderboardStyle: z.object({
+    position: z.object({ x: z.number(), y: z.number() }),
+    size: z.object({ width: z.number(), height: z.number() }),
+    style: z.enum(['classic', 'modern', 'minimal']),
+    colors: z.object({
+      background: z.string(),
+      text: z.string(),
+      accent: z.string(),
+    }),
+  }),
+  elements: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['text', 'image', 'video']),
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+    content: z.string(),
+    styles: z.record(z.any()),
+  })).default([]),
 });
 
 export const quizSchema = z.object({
@@ -92,7 +148,11 @@ export const quizSchema = z.object({
   minPlayers: z.number().default(2),
   maxPlayers: z.number().default(20),
   useAudioNarration: z.boolean().default(false),
+  aiVoice: z.string().optional(), // Выбранный голос ИИ для всех вопросов
+  questionTemplate: z.string().optional(), // Шаблон для всех вопросов
   questions: z.array(questionSchema),
+  splashScreens: z.array(splashScreenSchema).default([]),
+  resultsScreens: z.array(resultsScreenSchema).default([]),
 });
 
 // Player schema
@@ -117,3 +177,5 @@ export type InsertGameAnswer = z.infer<typeof insertGameAnswerSchema>;
 export type GameAnswer = typeof gameAnswers.$inferSelect;
 export type Question = z.infer<typeof questionSchema>;
 export type Player = z.infer<typeof playerSchema>;
+export type SplashScreen = z.infer<typeof splashScreenSchema>;
+export type ResultsScreen = z.infer<typeof resultsScreenSchema>;
